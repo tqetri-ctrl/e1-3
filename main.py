@@ -1,15 +1,16 @@
 """Mini NPU Simulator - 실행 엔트리포인트.
 
-Phase 2: 모드 1 (사용자 입력 3×3). 모드 2(data.json)는 Phase 3에서 구현.
+모드 1: 사용자 입력 3×3 / 모드 2: data.json 일괄 판정 (성능 표·요약은 Phase 4~5).
 """
 
 import time
 from typing import Callable, List
 
-from data_loader import read_matrix
+from data_loader import analyze_all, load_json, read_matrix
 from npu_simulator import judge, mac
 
 SIZE = 3
+DATA_PATH = "data.json"
 REPEAT = 10
 BAR = "#" + "-" * 39
 
@@ -67,6 +68,44 @@ def run_mode1(input_fn: Callable[[str], str] = input,
     return {"score_a": score_a, "score_b": score_b, "avg_ms": avg_ms, "verdict": verdict}
 
 
+def run_mode2(path: str = DATA_PATH,
+              output_fn: Callable[[str], None] = print) -> list:
+    out = output_fn
+    try:
+        data = load_json(path)
+    except ValueError as e:
+        out(f"[ERROR] {path} 로드 실패: {e}")
+        return []
+
+    filters, problems, results = analyze_all(data)
+
+    out(BAR)
+    out("# [1] 필터 로드")
+    out(BAR)
+    for n in sorted(set(filters) | set(problems)):
+        if n in filters:
+            out(f"[OK] size_{n} 필터 로드 완료 (Cross, X)")
+        else:
+            out(f"[X]  size_{n} {problems[n]}")
+    out("")
+    out(BAR)
+    out("# [2] 패턴 분석 (라벨 정규화 적용)")
+    out(BAR)
+    for r in results:
+        out(f"--- {r['id']} ---")
+        if r["score_cross"] is not None:
+            out(f"Cross 점수: {r['score_cross']!r}")
+            out(f"X 점수: {r['score_x']!r}")
+            out(f"판정: {r['verdict']} | expected: {r['expected']} | {r['status']}"
+                + (f" ({r['reason']})" if r["status"] == "FAIL" else ""))
+        else:
+            out(f"FAIL: {r['reason']}")
+    passed = sum(r["status"] == "PASS" for r in results)
+    out("")
+    out(f"(임시 합계: 총 {len(results)}개 / 통과 {passed}개 / 실패 {len(results) - passed}개)")
+    return results
+
+
 def select_mode(input_fn: Callable[[str], str] = input,
                 output_fn: Callable[[str], None] = print) -> int:
     output_fn("[모드 선택]")
@@ -88,7 +127,7 @@ def main() -> None:
         if mode == 1:
             run_mode1()
         else:
-            print("모드 2(data.json 분석)는 아직 구현되지 않았습니다. (Phase 3 예정)")
+            run_mode2()
     except (EOFError, KeyboardInterrupt):
         print("\n입력이 종료되어 프로그램을 마칩니다.")
 
