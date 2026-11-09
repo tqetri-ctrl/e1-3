@@ -47,18 +47,19 @@ def _pad(text: str, width: int, right: bool = False) -> str:
     return gap + text if right else text + gap
 
 
-def format_table(rows: List[Dict]) -> List[str]:
-    lines = [_pad("크기", 8) + _pad("평균 시간(ms)", 16, True) + _pad("연산 횟수(N²)", 16, True),
-             "-" * 40]
+def format_table(rows: List[Dict], repeat: int = REPEAT) -> List[str]:
+    lines = [_pad("크기", 8) + _pad("평균 시간(ms)", 16, True)
+             + _pad("연산 횟수(N²)", 16, True) + _pad("반복", 6, True),
+             "-" * 46]
     for r in rows:
         label = f"{r['n']}×{r['n']}"
-        lines.append(f"{label:<8}{r['avg_ms']:>16.4f}{r['ops']:>16d}")
+        lines.append(f"{label:<8}{r['avg_ms']:>16.4f}{r['ops']:>16d}{repeat:>6d}")
     return lines
 
 
 def print_benchmark(output_fn: Callable[[str], None] = print,
                     sizes: Sequence[int] = SIZES, repeat: int = REPEAT) -> List[Dict]:
     rows = run_benchmark(sizes, repeat)
-    for line in format_table(rows):
+    for line in format_table(rows, repeat):
         output_fn(line)
     return rows

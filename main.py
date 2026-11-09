@@ -77,8 +77,11 @@ def print_summary(results: List[dict], output_fn: Callable[[str], None] = print)
     output_fn("# [4] 결과 요약")
     output_fn(BAR)
     output_fn(f"총 테스트: {s['total']}개")
-    output_fn(f"통과: {s['passed']}개")
-    output_fn(f"실패: {s['failed']}개")
+    total = s["total"]
+    pass_rate = s["passed"] / total * 100 if total else 0.0
+    fail_rate = s["failed"] / total * 100 if total else 0.0
+    output_fn(f"통과: {s['passed']}개 ({pass_rate:.1f}%)")
+    output_fn(f"실패: {s['failed']}개 ({fail_rate:.1f}%)")
     if s["failures"]:
         output_fn("")
         output_fn("실패 케이스:")
