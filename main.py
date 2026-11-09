@@ -3,26 +3,15 @@
 모드 1: 사용자 입력 3×3 / 모드 2: data.json 일괄 판정 (성능 표·요약은 Phase 4~5).
 """
 
-import time
 from typing import Callable, List
 
+from benchmark import REPEAT, measure_avg_ms as measure_mac_ms, print_benchmark
 from data_loader import analyze_all, load_json, read_matrix
 from npu_simulator import judge, mac
 
 SIZE = 3
 DATA_PATH = "data.json"
-REPEAT = 10
 BAR = "#" + "-" * 39
-
-
-def measure_mac_ms(pattern, filt, repeat: int = REPEAT) -> float:
-    """MAC 연산 구간만 repeat회 측정해 평균(ms)을 반환한다 (I/O 제외)."""
-    total = 0.0
-    for _ in range(repeat):
-        start = time.perf_counter()
-        mac(pattern, filt)
-        total += time.perf_counter() - start
-    return total / repeat * 1000.0
 
 
 def format_matrix(m: List[List[float]]) -> str:
@@ -65,6 +54,11 @@ def run_mode1(input_fn: Callable[[str], str] = input,
         out(f"판정: 판정 불가 (|A-B| < 1e-9)")
     else:
         out(f"판정: {verdict}")
+    out("")
+    out(BAR)
+    out(f"# [4] 성능 분석 (평균/{REPEAT}회)")
+    out(BAR)
+    print_benchmark(out, sizes=(SIZE,))
     return {"score_a": score_a, "score_b": score_b, "avg_ms": avg_ms, "verdict": verdict}
 
 
@@ -100,6 +94,11 @@ def run_mode2(path: str = DATA_PATH,
                 + (f" ({r['reason']})" if r["status"] == "FAIL" else ""))
         else:
             out(f"FAIL: {r['reason']}")
+    out("")
+    out(BAR)
+    out(f"# [3] 성능 분석 (평균/{REPEAT}회)")
+    out(BAR)
+    print_benchmark(out)
     passed = sum(r["status"] == "PASS" for r in results)
     out("")
     out(f"(임시 합계: 총 {len(results)}개 / 통과 {passed}개 / 실패 {len(results) - passed}개)")
