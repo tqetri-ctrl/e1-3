@@ -58,7 +58,7 @@ class Phase2Test(unittest.TestCase):
 
     def test_select_mode(self):
         out = []
-        self.assertEqual(select_mode(feeder(["x", "3", "2"]), out.append), 2)
+        self.assertEqual(select_mode(feeder(["x", "4", "2"]), out.append), 2)
         self.assertEqual(sum("입력 오류" in s for s in out), 2)
 
 

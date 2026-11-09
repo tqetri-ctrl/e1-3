@@ -5,6 +5,7 @@
 
 from typing import Callable, List
 
+from bonus import run_bonus
 from benchmark import REPEAT, measure_avg_ms as measure_mac_ms, print_benchmark
 from data_loader import analyze_all, load_json, read_matrix
 from npu_simulator import judge, mac
@@ -134,11 +135,12 @@ def select_mode(input_fn: Callable[[str], str] = input,
     output_fn("")
     output_fn("1. 사용자 입력 (3x3)")
     output_fn("2. data.json 분석")
+    output_fn("3. 보너스: 패턴 생성기 + 2D/1D 성능 비교")
     while True:
         choice = input_fn("선택: ").strip()
-        if choice in ("1", "2"):
+        if choice in ("1", "2", "3"):
             return int(choice)
-        output_fn("입력 오류: 1 또는 2를 입력하세요.")
+        output_fn("입력 오류: 1, 2, 3 중 하나를 입력하세요.")
 
 
 def main() -> None:
@@ -148,8 +150,10 @@ def main() -> None:
         mode = select_mode()
         if mode == 1:
             run_mode1()
-        else:
+        elif mode == 2:
             run_mode2()
+        else:
+            run_bonus()
     except (EOFError, KeyboardInterrupt):
         print("\n입력이 종료되어 프로그램을 마칩니다.")
 
