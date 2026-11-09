@@ -62,6 +62,30 @@ def run_mode1(input_fn: Callable[[str], str] = input,
     return {"score_a": score_a, "score_b": score_b, "avg_ms": avg_ms, "verdict": verdict}
 
 
+def summarize(results: List[dict]) -> dict:
+    """총/통과/실패 개수와 실패 케이스 목록(id, 사유)을 집계한다."""
+    failed = [r for r in results if r["status"] != "PASS"]
+    return {"total": len(results), "passed": len(results) - len(failed),
+            "failed": len(failed),
+            "failures": [(r["id"], r["reason"] or "사유 미상") for r in failed]}
+
+
+def print_summary(results: List[dict], output_fn: Callable[[str], None] = print) -> dict:
+    s = summarize(results)
+    output_fn(BAR)
+    output_fn("# [4] 결과 요약")
+    output_fn(BAR)
+    output_fn(f"총 테스트: {s['total']}개")
+    output_fn(f"통과: {s['passed']}개")
+    output_fn(f"실패: {s['failed']}개")
+    if s["failures"]:
+        output_fn("")
+        output_fn("실패 케이스:")
+        for case_id, reason in s["failures"]:
+            output_fn(f"- {case_id}: {reason}")
+    return s
+
+
 def run_mode2(path: str = DATA_PATH,
               output_fn: Callable[[str], None] = print) -> list:
     out = output_fn
@@ -99,9 +123,8 @@ def run_mode2(path: str = DATA_PATH,
     out(f"# [3] 성능 분석 (평균/{REPEAT}회)")
     out(BAR)
     print_benchmark(out)
-    passed = sum(r["status"] == "PASS" for r in results)
     out("")
-    out(f"(임시 합계: 총 {len(results)}개 / 통과 {passed}개 / 실패 {len(results) - passed}개)")
+    print_summary(results, out)
     return results
 
 
